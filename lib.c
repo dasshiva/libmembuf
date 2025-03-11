@@ -195,6 +195,89 @@ uint64_t mset(MemBuf* mem, uint32_t n, uint32_t sz, const void* b) {
 	return (uint64_t)n * sz;
 }
 
+int mseek(MemBuf* mem, int whence, int64_t pos) {
+	if (!mem) {
+		mem->flags |= MEMBUF_NULL;
+		return -1;
+	}
+
+	switch (whence) {
+		case MEMBUF_CURRENT: {
+			if (!pos)
+				return 0;
+
+			if (pos < 0) {
+				// check for underflow
+				if (mem->offset + pos > mem->offset) {
+					mem->flags |= MEMBUF_INVALID_OFFSET;
+					return -1;
+				}
+
+			}
+
+			else {
+				// check for overflow
+				if (mem->offset + pos < mem->offset) {
+					mem->flags |= MEMBUF_INVALID_OFFSET;
+					return -1;
+				}
+
+				if (mem->offset + pos > mem->size) {
+					mem->flags |= MEMBUF_INVALID_OFFSET;
+					return -1;
+				}
+
+			}
+
+			mem->offset += pos;
+			break;
+		}
+
+		case MEMBUF_BEGIN: { // Only +ve pos/0  is allowed
+			if (pos < 0) {
+				mem->flags |= MEMBUF_INVALID_OFFSET;
+				return -1;
+			}
+
+
+			// check for overflow
+			if (mem->offset + pos < mem->offset) {
+				mem->flags |= MEMBUF_INVALID_OFFSET;
+				return -1;
+			}
+
+
+			if (mem->offset + pos > mem->size) {
+				mem->flags |= MEMBUF_INVALID_OFFSET;
+				return -1;
+			}
+
+			mem->offset = pos;
+			break;	
+		}
+
+		case MEMBUF_END: { // Only -ve pos/0 is allowed
+			if (pos > 0) {
+				mem->flags |= MEMBUF_INVALID_OFFSET;
+				return -1;
+			}
+
+			// check for underflow
+                        if (mem->offset + pos > mem->offset) {
+				mem->flags |= MEMBUF_INVALID_OFFSET;
+                                return -1;
+			}
+
+			mem->offset = mem->size - 1 - pos; 
+		}
+
+		default: {
+			mem->flags |= MEMBUF_INVALID_WHENCE;
+			return -1;
+		}
+	};
+}
+
 uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
 	if (!mem) {
                 mem->flags |= MEMBUF_NULL;                         
@@ -212,7 +295,7 @@ uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
 	if (mem->offset + size < mem->capacity) {
 		memcpy(((uint8_t*)mem->buf) + ((mem->offset == 0) 
 				? mem->offset : (mem->offset + 1)), src, size);
-		mem->offset += size - 1; // mem->offset is 0 indexed
+		mem->offset += (mem->offset == 0) ? size - 1 : size; // mem->offset is 0 indexed
 		mem->size += size;       // mem->size is not 0 indexed
 	}
 	else {
@@ -276,7 +359,9 @@ static const char* e2s[] = {
 	[MEMBUF_DEST_NULL] = "Destination to mread() is NULL\n",
 	[MEMBUF_SRC_NULL] = "Source to mwrite() is NULL\n",
 	[MEMBUF_OUT_OF_MEMORY] = "System has run out of memory\n",
-	[MEMBUF_FILE_ACCESS_ERROR] = "Could not memdump() to file as write failed\n"
+	[MEMBUF_FILE_ACCESS_ERROR] = "Could not memdump() to file as write failed\n",
+	[MEMBUF_INVALID_OFFSET] = "Cannot move file pointer to invalid offfset\n",
+	[MEMBUF_INVALID_WHENCE] = "whence value given to mseek() is invalid()\n"
 };
 
 const char* merrToString(int code) {
