@@ -1,0 +1,7 @@
+libmembuf: A simple library to work with memory buffers
+
+Documentation on available methods can be found in the header "membuf.h"
+See the tests/ drectory for example usage
+
+Copyright (C) 2025 Shivashish Das
+Licensed under the MIT License
