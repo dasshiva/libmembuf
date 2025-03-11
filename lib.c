@@ -246,7 +246,8 @@ uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
 		memcpy(((uint8_t*)mem->buf) + mem->offset, src, writable);
 		mem->offset += writable;
 
-		uint64_t ncapacity = PAGE_SIZE_ALIGN(mem->capacity + (size - writable));
+		// Allocate 8 more pages so that we can reduce calls to mremap() 
+		uint64_t ncapacity = PAGE_SIZE_ALIGN(mem->capacity + (size - writable)) + (8 * PAGE_SZ);
 		void* new_ptr = mremap(mem->buf, mem->capacity, ncapacity, MREMAP_MAYMOVE);
 		if (new_ptr == MAP_FAILED) {
 			mem->flags |= MEMBUF_OUT_OF_MEMORY;

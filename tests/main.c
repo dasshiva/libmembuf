@@ -30,7 +30,7 @@ int main(int argc, const char** argv) {
 	us = mwrite(buf, 4, &ver);
 	PRINT_IF_ERROR_UINT64_MAX(us, buf);
 
-	int s = memdump(buf, "artifact.wasm.test");
+	int s = memdump(buf, "test-files/artifact.wasm.test");
 	PRINT_IF_ERROR_NEGATIVE(s, buf);
 
 	s = mclose(buf);
