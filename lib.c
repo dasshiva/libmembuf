@@ -276,6 +276,8 @@ int mseek(MemBuf* mem, int whence, int64_t pos) {
 			return -1;
 		}
 	};
+
+	return 0;
 }
 
 uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
