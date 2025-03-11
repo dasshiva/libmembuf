@@ -50,9 +50,6 @@ uint8_t merror(MemBuf*);
 // never fails
 const char* merrToString(int code);
 
-// check if buffer has anything more to be read
-int meof(MemBuf*);
-
 // close the stream and free all underlying memory
 // after calling this buf is no longer usable
 int mclose(MemBuf* buf);
@@ -66,9 +63,6 @@ MemBuf* mopen(const char* name, uint64_t len, void* init);
 // This is equivalent to mopen(filename, fileContents.length(), fileContents)
 // file must not be NULL
 MemBuf* mopenFromFile(const char* file);
-
-// Set flags associated with the stream
-void msetFlags(MemBuf*, uint64_t);
 
 // Flush contents to stream (currently is a no-op)
 int mflush(MemBuf*);

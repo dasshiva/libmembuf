@@ -349,10 +349,6 @@ uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
 	return size;
 }
 
-void mSetFlags(MemBuf* m, uint64_t mask) {
-	// TODO: Implement flags
-}
-
 static const char* e2s[] = {
 	[0] = "Success\n",
 	[MEMBUF_NULL] = "MemBuf* is NULL\n",
