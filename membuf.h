@@ -68,22 +68,13 @@ MemBuf* mopen(const char* name, uint64_t len, void* init);
 MemBuf* mopenFromFile(const char* file);
 
 // Set flags associated with the stream
-void msetFlags(MemBuf*, int);
+void msetFlags(MemBuf*, uint64_t);
 
 // Flush contents to stream (currently is a no-op)
 int mflush(MemBuf*);
 
-// get next byte from memory stream
-int mgetc(MemBuf*);
-
-// put a byte into stream and advance pointer
-int mputc(MemBuf*, int byte);
-
 // query position of pointer in memory stream
 uint64_t mtell(MemBuf*);
-
-// write formatted string to mem based on parameters
-int mprintf(MemBuf* mem, const char* fmt, ...);
 
 // set position of pointer to pos with respect to 'whence'
 int mseek(MemBuf* mem, int whence, int64_t pos);
@@ -115,6 +106,8 @@ enum {
 	MEMBUF_DEST_NULL,
 	MEMBUF_INVALID_READ,
 	MEMBUF_SRC_NULL,
-	MEMBUF_OUT_OF_MEMORY
+	MEMBUF_OUT_OF_MEMORY,
+	MEMBUF_ERR_MAX
 };
+
 #endif

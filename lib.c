@@ -242,3 +242,24 @@ uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
 
 	return size;
 }
+
+void mSetFlags(MemBuf* m, uint64_t mask) {
+	// TODO: Implement flags
+}
+
+static const char* e2s[] = {
+	[0] = "Success\n",
+	[MEMBUF_NULL] = "MemBuf* is NULL\n",
+	[MEMBUF_UNMAP_FAILED] = "Could not unmap allocated memory\n",
+	[MEMBUF_INVALID_READ] = "Cannot read more than the length of the stream\n",
+	[MEMBUF_DEST_NULL] = "Destination to mread() is NULL\n",
+	[MEMBUF_SRC_NULL] = "Source to mwrite() is NULL\n",
+	[MEMBUF_OUT_OF_MEMORY] = "System has run out of memory\n",
+	[MEMBUF_FILE_ACCESS_ERROR] = "Could not memdump() to file as write failed\n"
+};
+
+const char* merrToString(int code) {
+	if (code >= MEMBUF_ERR_MAX)
+		return "Unknown error";
+	return e2s[code];
+}
