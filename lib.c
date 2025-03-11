@@ -16,9 +16,9 @@
 // Align x to a bytes
 // This macro is inspired by the linux kernel's ALIGN and __ALIGN_MASK macros
 // Here, we don't need typeof(x) because x is always a uint64_t
-#define PAGE_SIZE_ALIGN(x) (((x) + (PAGE_SIZE - 1)) & ~(PAGE_SIZE - 1))
+#define PAGE_SIZE_ALIGN(x) (((x) + (PAGE_SZ - 1)) & ~(PAGE_SZ - 1))
 
-static uint32_t PAGE_SIZE = 0;
+static uint32_t PAGE_SZ = 0;
 
 struct MemBuf {
 	uint64_t    size;
@@ -36,7 +36,7 @@ MemBuf* mopen(const char* name, uint64_t len, void* init) {
 		return NULL;
 
 	if (!PAGE_SIZE) {
-		PAGE_SIZE = sysconf(_SC_PAGESIZE);
+		PAGE_SZ = sysconf(_SC_PAGESIZE);
 		// PAGE_SIZE is always a power of 2, so check for it
 		if (PAGE_SIZE & 1) // possibly buggy system, don't continue
 			return NULL;
@@ -152,4 +152,93 @@ int memdump(MemBuf* mem, const char* file) {
 
 	fclose(fptr);
 	return 0;
+}
+
+uint64_t mread(MemBuf* mem, uint64_t size, void* dest) {
+	if (!mem) {
+		mem->flags |= MEMBUF_NULL;
+		return UINT64_MAX;
+	}
+
+	if (!size)
+		return 0;
+
+	if (!dest) {
+		mem->flags |= MEMBUF_DEST_NULL;
+		return UINT64_MAX;
+	}
+
+	if (mem->offset + size >= mem->size) {
+		mem->flags |= MEMBUF_INVALID_READ;
+		return UINT64_MAX;
+	}
+
+	memcpy(dest, ((uint8_t*)mem->buf) + mem->offset, size);
+	mem->offset += size;
+	return size;
+}
+
+uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
+	if (!mem) {
+                mem->flags |= MEMBUF_NULL;                         
+		return UINT64_MAX;
+        }
+
+        if (!size)
+		return 0;
+
+        if (!src) {
+                mem->flags |= MEMBUF_SRC_NULL;
+                return UINT64_MAX;
+        }
+
+	if (mem->offset + size < mem->capacity) {
+		memcpy(((uint8_t*)mem->buf) + mem->offset, src, size);
+		mem->offset += size;
+	}
+	else {
+		/* This is a little complicated so read this carefully 
+		 * First copy off everything that fits into the current
+		 * buffer.
+		 *
+		 * Then get more memory from the kernel using mremap().
+		 * We use mremap() with MREMAP_MAYMOVE to reduce the
+		 * chances that mremap() fails as there may be other
+		 * mappings around mem->buf that we don't know about
+		 *
+		 * The kernel does the work of moving the contents 
+		 * of the existing memory around so we need not worry
+		 * about doing memmove() to the right location.
+		 *
+		 * However the address at mem->buf is invalidated by the
+		 * call to mremap() so we assign the value returned
+		 * by mremap back to mem->buf.
+		 *
+		 * Also since we use buffer relative offsets to access
+		 * our contents this invalidation of memory has no
+		 * effect on the working of this library
+		 *
+		 * If this library is modified at any point, do not 
+		 * ever use absolute addresses anywhere in the code
+		 * or everything breaks
+		 */
+
+		uint64_t writable = size - (mem->capacity - mem->size);
+		memcpy(((uint8_t*)mem->buf) + mem->offset, src, writable);
+		mem->offset += writable;
+
+		uint64_t ncapacity = PAGE_SIZE_ALIGN(mem->capacity + (size - writable));
+		void* new_ptr = mremap(mem->buf, mem->capacity, ncapacity, MREMAP_MAYMOVE);
+		if (new_ptr == MAP_FAILED) {
+			mem->flags |= MEMBUF_OUT_OF_MEMORY;
+			return UINT64_MAX;
+		}
+
+		mem->buf = new_ptr;
+		memcpy(((uint8_t*)mem->buf) + mem->offset, ((uint8_t*)src) + writable, size - writable);
+		mem->size += size;
+		mem->capacity = ncapacity;
+	}
+
+	return size;
 }

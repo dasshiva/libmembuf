@@ -88,11 +88,12 @@ int mprintf(MemBuf* mem, const char* fmt, ...);
 // set position of pointer to pos with respect to 'whence'
 int mseek(MemBuf* mem, int whence, int64_t pos);
 
-// read 'len' bytes from pointer and store into ptr
+// read 'len' bytes from pointer and store into ptr, advancing
+// pointer by size
 uint64_t mread(MemBuf* mem, uint64_t size, void* ptr);
 
 // write 'len' bytes from ptr to stream and advance pointer by 'size'
-uint64_t mwrite(MemBuf* mem, uint64_t size, void* ptr);
+uint64_t mwrite(MemBuf* mem, uint64_t size, const void* ptr);
 
 // dump contents of stream to 'file'
 // creates 'file' if it does not exist and overwrites 'file' if it exists
@@ -111,5 +112,9 @@ enum {
 	MEMBUF_NULL = 1,
 	MEMBUF_UNMAP_FAILED,
 	MEMBUF_FILE_ACCESS_ERROR,
+	MEMBUF_DEST_NULL,
+	MEMBUF_INVALID_READ,
+	MEMBUF_SRC_NULL,
+	MEMBUF_OUT_OF_MEMORY
 };
 #endif
