@@ -7,15 +7,34 @@
 		exit(1); \
 	}
 
+#define PRINT_IF_ERROR_UINT64_MAX(s, buf) \
+	if (s == UINT64_MAX) { \
+		printf("%s", merrToString(merror(buf))); \
+                exit(2); \
+	}
+
+#define PRINT_IF_ERROR_NEGATIVE(s, buf) \
+	if (s == -1) { \
+		printf("%s", merrToString(merror(buf))); \
+		exit(2); \
+	}
+
 int main(int argc, const char** argv) {
 	MemBuf* buf = mopen(NULL, 0, NULL);
 	EXIT_IF_NULL(buf, "Could not open buffer");
 	int ver = 1;
 
-	mwrite(buf, 4, "\0asm");
-	mwrite(buf, 4, &ver);
-	memdump(buf, "artifact.wasm.test");
-	mclose(buf);
+	uint64_t us = mwrite(buf, 4, "\0asm");
+	PRINT_IF_ERROR_UINT64_MAX(us, buf);
+
+	us = mwrite(buf, 4, &ver);
+	PRINT_IF_ERROR_UINT64_MAX(us, buf);
+
+	int s = memdump(buf, "artifact.wasm.test");
+	PRINT_IF_ERROR_NEGATIVE(s, buf);
+
+	s = mclose(buf);
+	PRINT_IF_ERROR_NEGATIVE(s, buf);
 
 	return 0;
 }

@@ -5,9 +5,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #if defined(__linux__) || defined(__ANDROID__)
-#include <sys/mman.h>
 #include <unistd.h>
+
+#ifdef __GLIBC__
+#define __USE_GNU
+#endif
+
+#include <sys/mman.h>
 #include <sys/stat.h>
 #else
 #error "Unsupported platform"
@@ -35,10 +41,10 @@ MemBuf* mopen(const char* name, uint64_t len, void* init) {
 	if (!ret)
 		return NULL;
 
-	if (!PAGE_SIZE) {
+	if (!PAGE_SZ) {
 		PAGE_SZ = sysconf(_SC_PAGESIZE);
 		// PAGE_SIZE is always a power of 2, so check for it
-		if (PAGE_SIZE & 1) // possibly buggy system, don't continue
+		if (PAGE_SZ & 1) // possibly buggy system, don't continue
 			return NULL;
 	}
 
@@ -46,7 +52,7 @@ MemBuf* mopen(const char* name, uint64_t len, void* init) {
 	ret->size = len;
 	ret->offset = 0;
 	ret->flags = 0;
-	ret->capacity = (len == 0) ? PAGE_SIZE : PAGE_SIZE_ALIGN(len);
+	ret->capacity = (len == 0) ? PAGE_SZ : PAGE_SIZE_ALIGN(len);
 	ret->buf = mmap(NULL, ret->capacity, PROT_READ | PROT_WRITE, 
 			MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 
@@ -144,7 +150,8 @@ int memdump(MemBuf* mem, const char* file) {
 
 	// Write only if there is something to be written
 	if (mem->size) {
-		if (fwrite(mem->buf, mem->size, 1, fptr) != mem->size) {
+		uint64_t status = fwrite(mem->buf, 1, mem->size, fptr);
+		if (status != mem->size) {
 			mem->flags |= MEMBUF_FILE_ACCESS_ERROR;
 			return -1;
 		}
@@ -178,6 +185,16 @@ uint64_t mread(MemBuf* mem, uint64_t size, void* dest) {
 	return size;
 }
 
+uint64_t mset(MemBuf* mem, uint32_t n, uint32_t sz, const void* b) {
+	for (uint32_t i = 0; i < n; i++) {
+		uint64_t status = mwrite(mem, sz, b);
+		if (status == UINT64_MAX)
+			return status;
+	}
+
+	return (uint64_t)n * sz;
+}
+
 uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
 	if (!mem) {
                 mem->flags |= MEMBUF_NULL;                         
@@ -193,8 +210,10 @@ uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
         }
 
 	if (mem->offset + size < mem->capacity) {
-		memcpy(((uint8_t*)mem->buf) + mem->offset, src, size);
-		mem->offset += size;
+		memcpy(((uint8_t*)mem->buf) + ((mem->offset == 0) 
+				? mem->offset : (mem->offset + 1)), src, size);
+		mem->offset += size - 1; // mem->offset is 0 indexed
+		mem->size += size;       // mem->size is not 0 indexed
 	}
 	else {
 		/* This is a little complicated so read this carefully 
@@ -237,6 +256,7 @@ uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
 		mem->buf = new_ptr;
 		memcpy(((uint8_t*)mem->buf) + mem->offset, ((uint8_t*)src) + writable, size - writable);
 		mem->size += size;
+		mem->offset += (size - writable) - 1;
 		mem->capacity = ncapacity;
 	}
 

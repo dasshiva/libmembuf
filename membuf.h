@@ -90,6 +90,13 @@ uint64_t mwrite(MemBuf* mem, uint64_t size, const void* ptr);
 // creates 'file' if it does not exist and overwrites 'file' if it exists
 int memdump(MemBuf* mem, const char* file);
 
+// Write 'n' occurrences of 'b' having size 'sz' to stream
+// Equivalent to doing
+// for (int i = 0; i < n; i++) {
+// 	mwrite(mem, sz, b);
+// }
+uint64_t mset(MemBuf* mem, uint32_t n, uint32_t sz, const void* b);
+
 // mgets()/mputs() is not provided as we don't know if the contents 
 // in memory is from a text file or not and therefore there is 
 // no guarantee that there are newlines to terminate the call 
