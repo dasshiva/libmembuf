@@ -19,7 +19,7 @@
 #error "Unsupported platform"
 #endif
 
-// Align x to a bytes
+// Align x to PAGE_SIZE
 // This macro is inspired by the linux kernel's ALIGN and __ALIGN_MASK macros
 // Here, we don't need typeof(x) because x is always a uint64_t
 #define PAGE_SIZE_ALIGN(x) (((x) + (PAGE_SZ - 1)) & ~(PAGE_SZ - 1))

@@ -24,10 +24,10 @@ int main(int argc, const char** argv) {
 	EXIT_IF_NULL(buf, "Could not open buffer");
 	int ver = 1;
 
-	uint64_t us = mwrite(buf, 4, "\0asm");
+	uint64_t us = writeU32(buf, "\0asm");
 	PRINT_IF_ERROR_UINT64_MAX(us, buf);
 
-	us = mwrite(buf, 4, &ver);
+	us = writeU32(buf, &ver);
 	PRINT_IF_ERROR_UINT64_MAX(us, buf);
 
 	int s = memdump(buf, "test-files/artifact.wasm.test");
