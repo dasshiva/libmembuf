@@ -325,7 +325,7 @@ uint64_t mwrite(MemBuf* mem, uint64_t size, const void* src) {
 		 * or everything breaks
 		 */
 
-		uint64_t writable = size - (mem->capacity - mem->size);
+		uint64_t writable = mem->capacity - mem->size;
 		memcpy(((uint8_t*)mem->buf) + mem->offset, src, writable);
 		mem->offset += writable;
 
