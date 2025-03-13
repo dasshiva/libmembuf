@@ -77,6 +77,10 @@ MemBuf* mopen(const char* name, uint64_t len, void* init) {
 
 }
 
+uint64_t size(MemBuf* buf) {
+	return buf->size;
+}
+
 int mclose(MemBuf* buf) {
 	if (!buf) {
 		buf->flags |= MEMBUF_NULL;
