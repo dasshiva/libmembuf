@@ -77,7 +77,7 @@ MemBuf* mopen(const char* name, uint64_t len, void* init) {
 
 }
 
-uint64_t size(MemBuf* buf) {
+uint64_t msize(MemBuf* buf) {
 	return buf->size;
 }
 

@@ -71,7 +71,7 @@ int mflush(MemBuf*);
 uint64_t mtell(MemBuf*);
 
 // get size of the memory buffer (constant unless mwrite() is called)
-uint64_t size(MemBuf* buf);
+uint64_t msize(MemBuf* buf);
 
 // set position of pointer to pos with respect to 'whence'
 int mseek(MemBuf* mem, int whence, int64_t pos);
