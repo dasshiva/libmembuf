@@ -127,7 +127,10 @@ MemBuf* mopenFromFile(const char* file) {
 	}
 
 	fclose(fptr);
-	return mopen(file, st.st_size, init);
+
+	MemBuf* ret = mopen(file, st.st_size, init);
+	free(init);
+	return ret;
 }
 
 
