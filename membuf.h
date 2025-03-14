@@ -128,13 +128,13 @@ enum {
  * var - the location to write to memory
  */
 
-#define readU8(buf, var)  mread(buf, 1, var);
-#define readU16(buf, var) mread(buf, 2, var);
-#define readU32(buf, var) mread(buf, 4, var);
-#define readU64(buf, var) mread(buf, 8, var);
+#define readU8(buf, var)  mread(buf, 1, var)
+#define readU16(buf, var) mread(buf, 2, var)
+#define readU32(buf, var) mread(buf, 4, var)
+#define readU64(buf, var) mread(buf, 8, var)
 
-#define writeU8(buf, var)  mwrite(buf, 1, var);
-#define writeU16(buf, var) mwrite(buf, 2, var);
-#define writeU32(buf, var) mwrite(buf, 4, var);
-#define writeU64(buf, var) mwrite(buf, 8, var);
+#define writeU8(buf, var)  mwrite(buf, 1, var)
+#define writeU16(buf, var) mwrite(buf, 2, var)
+#define writeU32(buf, var) mwrite(buf, 4, var)
+#define writeU64(buf, var) mwrite(buf, 8, var)
 #endif
